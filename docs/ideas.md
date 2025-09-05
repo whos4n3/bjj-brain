@@ -9,3 +9,6 @@
  
 
 - The cards should have the youtube video thumbnail as the main pic when seen and when you click on it it should have the vid then a brief description and then step by step instructions below that.
+- add firebase for authentication instead of users in db.
+- add authentication using google account
+- dark/white mode
