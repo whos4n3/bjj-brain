@@ -1,0 +1,39 @@
+# Development overrides
+version: '3.8'
+
+services:
+  postgres:
+    ports:
+      - "5432:5432" # Expose for direct access in development
+
+  redis:
+    ports:
+      - "6379:6379" # Expose for direct access in development
+
+  backend:
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./backend:/app:delegated
+      - /app/node_modules
+    ports:
+      - "8080:8080" # Direct access for development
+    deploy:
+      replicas: 1 # Single instance for development
+
+  frontend:
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
+    volumes:
+      - ./frontend:/app:delegated
+      - /app/node_modules
+    ports:
+      - "3000:3000" # Direct access for development
+    deploy:
+      replicas: 1 # Single instance for development
+
+  # Disable nginx in development to allow direct access
+  nginx:
+    profiles:
+      - production

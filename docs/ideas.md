@@ -12,3 +12,8 @@
 - add firebase for authentication instead of users in db.
 - add authentication using google account
 - dark/white mode
+- remove postgres but add mongodb 
+- Create a schema for the techniques
+- Create a yaml template for this schema so users can submit techniques in yaml format and then it get's ingested into the db
+- user uploaded techniques can only be viewable to them until the admin approves of the techniques(with possible changes), then it can become globally available
+- 

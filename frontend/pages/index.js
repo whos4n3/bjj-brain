@@ -36,12 +36,14 @@ export default function Home() {
     trainingType: 'BOTH',
     bodyTypes: ['AVERAGE'],
     steps: [{ description: '', keyPoints: [], commonMistakes: [] }],
-    tags: []
+    tags: [],
+    videoUrl: '',
+    thumbnailUrl: ''
   });
 
-  // Fetch techniques when techniques page is accessed
+  // Fetch techniques when techniques page or My Game page is accessed
   useEffect(() => {
-    if (currentPage === 'techniques') {
+    if (currentPage === 'techniques' || currentPage === 'my-game') {
       fetchTechniques();
     }
   }, [currentPage]);
@@ -213,7 +215,9 @@ export default function Home() {
         trainingType: 'BOTH',
         bodyTypes: ['AVERAGE'],
         steps: [{ description: '', keyPoints: [], commonMistakes: [] }],
-        tags: []
+        tags: [],
+        videoUrl: '',
+        thumbnailUrl: ''
       });
       fetchTechniques(); // Refresh the techniques list
     } catch (error) {
@@ -451,21 +455,37 @@ export default function Home() {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="text-lg font-semibold text-gray-900 flex-1">{technique.name}</h3>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(technique.id);
-                      }}
-                      className={`ml-2 p-1 rounded-full transition-colors duration-200 ${
-                        favorites.includes(technique.id)
-                          ? 'text-red-500 hover:text-red-600'
-                          : 'text-gray-300 hover:text-red-500'
-                      }`}
-                    >
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                      </svg>
-                    </button>
+                    <div className="flex items-center space-x-1">
+                      {technique.videoUrl && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(technique.videoUrl, '_blank');
+                          }}
+                          className="p-1 rounded-full text-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-200"
+                          title="Watch video"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(technique.id);
+                        }}
+                        className={`p-1 rounded-full transition-colors duration-200 ${
+                          favorites.includes(technique.id)
+                            ? 'text-red-500 hover:text-red-600'
+                            : 'text-gray-300 hover:text-red-500'
+                        }`}
+                      >
+                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   
                   {technique.description && (
@@ -867,6 +887,28 @@ export default function Home() {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Video URL (optional)</label>
+                  <input
+                    type="url"
+                    value={newTechnique.videoUrl}
+                    onChange={(e) => setNewTechnique({...newTechnique, videoUrl: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Thumbnail URL (optional)</label>
+                  <input
+                    type="url"
+                    value={newTechnique.thumbnailUrl}
+                    onChange={(e) => setNewTechnique({...newTechnique, thumbnailUrl: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://example.com/image.jpg"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
                   <input
                     type="text"
@@ -1045,10 +1087,26 @@ export default function Home() {
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="text-lg font-semibold text-gray-900 flex-1">{technique.name}</h3>
-                    <div className="text-red-500">
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                      </svg>
+                    <div className="flex items-center space-x-1">
+                      {technique.videoUrl && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(technique.videoUrl, '_blank');
+                          }}
+                          className="p-1 rounded-full text-blue-500 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-200"
+                          title="Watch video"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </button>
+                      )}
+                      <div className="text-red-500">
+                        <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                      </div>
                     </div>
                   </div>
                   
