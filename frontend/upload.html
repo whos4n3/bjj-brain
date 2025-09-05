@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Technique - BJJ Brain</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav-links {
+            margin-top: 1rem;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.2);
+            transition: background 0.3s;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .upload-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .steps-container {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 1rem;
+            background: #f8f9fa;
+        }
+        
+        .step-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .step-input {
+            flex: 1;
+        }
+        
+        .remove-step {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        
+        .add-step {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+        
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .tag-input {
+            padding: 0.25rem 0.5rem;
+            background: #e2e8f0;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            border: none;
+            min-width: 100px;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.3s;
+        }
+        
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .error, .success {
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            border: 1px solid #feb2b2;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .relationships {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            margin-top: 1rem;
+        }
+        
+        .relationship-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .relationship-strength {
+            background: #667eea;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .step-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🥋 Upload New Technique</h1>
+            <p class="subtitle">Share your BJJ knowledge with the community</p>
+            <div class="nav-links">
+                <a href="index.html">← Back to Techniques</a>
+            </div>
+        </header>
+
+        <div id="message"></div>
+
+        <form id="techniqueForm" class="upload-form">
+            <div class="form-group">
+                <label for="name">Technique Name *</label>
+                <input type="text" id="name" name="name" required placeholder="e.g., Kimura from Side Control">
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description *</label>
+                <textarea id="description" name="description" required 
+                    placeholder="Detailed description of the technique, when to use it, and key concepts..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category">Category *</label>
+                    <select id="category" name="category" required>
+                        <option value="">Select Category</option>
+                        <option value="SUBMISSION">🔒 Submission</option>
+                        <option value="GUARD">🛡️ Guard</option>
+                        <option value="PASS">⚡ Guard Pass</option>
+                        <option value="SWEEP">🧹 Sweep</option>
+                        <option value="ESCAPE">🏃 Escape</option>
+                        <option value="TAKEDOWN">🤼 Takedown</option>
+                        <option value="TRANSITION">🔄 Transition</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="position">Starting Position *</label>
+                    <select id="position" name="position" required>
+                        <option value="">Select Position</option>
+                        <option value="STANDING">🤼 Standing</option>
+                        <option value="CLOSED_GUARD">🛡️ Closed Guard</option>
+                        <option value="OPEN_GUARD">⚡ Open Guard</option>
+                        <option value="HALF_GUARD">🔀 Half Guard</option>
+                        <option value="SIDE_CONTROL">⬅️ Side Control</option>
+                        <option value="MOUNT">⛰️ Mount</option>
+                        <option value="BACK_CONTROL">🎯 Back Control</option>
+                        <option value="KNEE_ON_BELLY">🦵 Knee on Belly</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="difficulty">Difficulty Level</label>
+                    <select id="difficulty" name="difficulty">
+                        <option value="FUNDAMENTAL">Fundamental</option>
+                        <option value="BEGINNER" selected>Beginner</option>
+                        <option value="INTERMEDIATE">Intermediate</option>
+                        <option value="ADVANCED">Advanced</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="videoUrl">Video URL (Optional)</label>
+                    <input type="url" id="videoUrl" name="videoUrl" 
+                        placeholder="https://youtube.com/watch?v=...">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Tags</label>
+                <input type="text" id="tagInput" placeholder="Add a tag and press Enter">
+                <div class="tags-container" id="tagsContainer"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Step-by-Step Instructions</label>
+                <div class="steps-container">
+                    <div id="stepsContainer">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <input type="text" class="step-input" placeholder="Enter step 1 instruction..." name="step">
+                            <button type="button" class="remove-step" onclick="removeStep(this)">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="add-step" onclick="addStep()">+ Add Step</button>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+                Create Technique
+            </button>
+        </form>
+
+        <div id="relationships" class="relationships" style="display: none;">
+            <h3>🔗 Related Techniques Found</h3>
+            <p>Your new technique has been automatically linked to these existing techniques:</p>
+            <div id="relationshipsList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+        let tags = [];
+        let stepCount = 1;
+
+        // Initialize
+        document.getElementById('tagInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addTag(this.value.trim());
+                this.value = '';
+            }
+        });
+
+        document.getElementById('techniqueForm').addEventListener('submit', handleSubmit);
+
+        function addTag(tagText) {
+            if (tagText && !tags.includes(tagText)) {
+                tags.push(tagText);
+                renderTags();
+            }
+        }
+
+        function removeTag(tagText) {
+            tags = tags.filter(tag => tag !== tagText);
+            renderTags();
+        }
+
+        function renderTags() {
+            const container = document.getElementById('tagsContainer');
+            container.innerHTML = tags.map(tag => 
+                `<span class="tag-input" onclick="removeTag('${tag}')" style="cursor: pointer; background: #667eea; color: white;" title="Click to remove">
+                    ${tag} ×
+                </span>`
+            ).join('');
+        }
+
+        function addStep() {
+            stepCount++;
+            const container = document.getElementById('stepsContainer');
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'step-item';
+            stepDiv.innerHTML = `
+                <div class="step-number">${stepCount}</div>
+                <input type="text" class="step-input" placeholder="Enter step ${stepCount} instruction..." name="step">
+                <button type="button" class="remove-step" onclick="removeStep(this)">Remove</button>
+            `;
+            container.appendChild(stepDiv);
+        }
+
+        function removeStep(button) {
+            const stepItem = button.closest('.step-item');
+            stepItem.remove();
+            renumberSteps();
+        }
+
+        function renumberSteps() {
+            const stepItems = document.querySelectorAll('.step-item');
+            stepCount = stepItems.length;
+            stepItems.forEach((item, index) => {
+                const stepNumber = item.querySelector('.step-number');
+                const input = item.querySelector('.step-input');
+                stepNumber.textContent = index + 1;
+                input.placeholder = `Enter step ${index + 1} instruction...`;
+            });
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const messageDiv = document.getElementById('message');
+            
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Creating Technique...';
+                
+                const formData = new FormData(e.target);
+                const steps = Array.from(document.querySelectorAll('input[name="step"]'))
+                    .map(input => input.value.trim())
+                    .filter(step => step);
+
+                const techniqueData = {
+                    name: formData.get('name'),
+                    description: formData.get('description'),
+                    category: formData.get('category'),
+                    position: formData.get('position'),
+                    difficulty: formData.get('difficulty') || 'BEGINNER',
+                    videoUrl: formData.get('videoUrl') || null,
+                    tags: tags,
+                    steps: steps
+                };
+
+                // Validation
+                if (!techniqueData.name || !techniqueData.description || !techniqueData.category || !techniqueData.position) {
+                    throw new Error('Please fill in all required fields');
+                }
+
+                if (steps.length === 0) {
+                    throw new Error('Please add at least one step');
+                }
+
+                const response = await fetch(`${API_BASE}/api/techniques`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(techniqueData)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to create technique');
+                }
+
+                // Show success message
+                messageDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Technique "${result.data.name}" created successfully!
+                        <br>
+                        <a href="index.html" style="color: #2f855a; text-decoration: underline;">← View all techniques</a>
+                    </div>
+                `;
+
+                // Show relationships
+                if (result.relationships && result.relationships.length > 0) {
+                    displayRelationships(result.relationships);
+                }
+
+                // Reset form
+                e.target.reset();
+                tags = [];
+                stepCount = 1;
+                renderTags();
+                document.getElementById('stepsContainer').innerHTML = `
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <input type="text" class="step-input" placeholder="Enter step 1 instruction..." name="step">
+                        <button type="button" class="remove-step" onclick="removeStep(this)">Remove</button>
+                    </div>
+                `;
+
+            } catch (error) {
+                messageDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Technique';
+            }
+        }
+
+        function displayRelationships(relationships) {
+            const relationshipsDiv = document.getElementById('relationships');
+            const listDiv = document.getElementById('relationshipsList');
+            
+            listDiv.innerHTML = relationships.map(rel => `
+                <div class="relationship-item">
+                    <div>
+                        <strong>${rel.techniqueName}</strong>
+                        <br>
+                        <small>${rel.relationship.replace(/_/g, ' ')}</small>
+                        ${rel.commonTags ? `<br><small>Common tags: ${rel.commonTags.join(', ')}</small>` : ''}
+                    </div>
+                    <div class="relationship-strength">
+                        ${Math.round(rel.strength * 100)}% match
+                    </div>
+                </div>
+            `).join('');
+            
+            relationshipsDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

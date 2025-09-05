@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: bjj-brain-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bjj_brain
+      POSTGRES_USER: bjj_user
+      POSTGRES_PASSWORD: bjj_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bjj_user -d bjj_brain"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:

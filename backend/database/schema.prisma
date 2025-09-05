@@ -1,0 +1,216 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  username     String?     @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  skillLevel   SkillLevel?
+  bodyType     BodyType?
+  trainingFocus TrainingFocus?
+  role         UserRole    @default(USER)
+  isVerified   Boolean     @default(false)
+  beltRank     String?
+  yearsTraining Int?
+  gymName      String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  techniques Technique[] @relation("UserTechniques")
+  favorites  UserTechniqueFavorite[]
+  
+  @@map("users")
+}
+
+model Technique {
+  id            String      @id @default(cuid())
+  name          String
+  description   String
+  difficulty    Difficulty  @default(BEGINNER)
+  position      Position
+  trainingType  TrainingType @default(BOTH)
+  bodyTypes     BodyType[]
+  videoUrl      String?
+  thumbnailUrl  String?
+  status        TechniqueStatus @default(APPROVED)
+  viewCount     Int         @default(0)
+  favoriteCount Int         @default(0)
+  successRate   Float?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  submittedById String
+  submittedBy   User        @relation("UserTechniques", fields: [submittedById], references: [id], onDelete: Cascade)
+  
+  steps            TechniqueStep[]
+  tags             TechniqueTag[]
+  favorites        UserTechniqueFavorite[]
+  transitionsFrom  TechniqueTransition[] @relation("FromTechnique")
+  transitionsTo    TechniqueTransition[] @relation("ToTechnique")
+  
+  @@map("techniques")
+}
+
+model TechniqueStep {
+  id              String   @id @default(cuid())
+  stepNumber      Int
+  description     String
+  keyPoints       String[]
+  commonMistakes  String[]
+  imageUrl        String?
+  
+  techniqueId     String
+  technique       Technique @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+  
+  @@unique([techniqueId, stepNumber])
+  @@map("technique_steps")
+}
+
+model Tag {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  category    TagCategory @default(CONCEPT)
+  createdAt   DateTime    @default(now())
+  
+  techniques  TechniqueTag[]
+  
+  @@map("tags")
+}
+
+model TechniqueTag {
+  id          String @id @default(cuid())
+  
+  techniqueId String
+  technique   Technique @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+  
+  tagId       String
+  tag         Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  
+  @@unique([techniqueId, tagId])
+  @@map("technique_tags")
+}
+
+model UserTechniqueFavorite {
+  id          String   @id @default(cuid())
+  notes       String?
+  createdAt   DateTime @default(now())
+  
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  techniqueId String
+  technique   Technique @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, techniqueId])
+  @@map("user_technique_favorites")
+}
+
+model TechniqueTransition {
+  id            String @id @default(cuid())
+  description   String?
+  probability   Float?
+  createdAt     DateTime @default(now())
+  
+  fromTechniqueId String
+  fromTechnique   Technique @relation("FromTechnique", fields: [fromTechniqueId], references: [id], onDelete: Cascade)
+  
+  toTechniqueId   String
+  toTechnique     Technique @relation("ToTechnique", fields: [toTechniqueId], references: [id], onDelete: Cascade)
+  
+  @@unique([fromTechniqueId, toTechniqueId])
+  @@map("technique_transitions")
+}
+
+enum Position {
+  STANDING
+  CLINCH
+  TAKEDOWN
+  CLOSED_GUARD
+  OPEN_GUARD
+  HALF_GUARD
+  BUTTERFLY_GUARD
+  DE_LA_RIVA
+  SPIDER_GUARD
+  RUBBER_GUARD
+  SIDE_CONTROL
+  MOUNT
+  BACK_CONTROL
+  KNEE_ON_BELLY
+  NORTH_SOUTH
+  TURTLE
+  SCRAMBLE
+  GUARD_PASS
+  SWEEP
+  ESCAPE
+  SUBMISSION
+  COUNTER
+}
+
+enum Difficulty {
+  FUNDAMENTAL
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum SkillLevel {
+  WHITE_BELT
+  BLUE_BELT
+  PURPLE_BELT
+  BROWN_BELT
+  BLACK_BELT
+}
+
+enum BodyType {
+  SHORTER
+  AVERAGE
+  TALLER
+}
+
+enum TrainingFocus {
+  GI_ONLY
+  NOGI_ONLY
+  BOTH
+}
+
+enum TrainingType {
+  GI_ONLY
+  NOGI_ONLY
+  BOTH
+}
+
+enum TechniqueStatus {
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum TagCategory {
+  POSITION
+  CONCEPT
+  MOVEMENT
+  GRIP
+  SUBMISSION_TYPE
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}

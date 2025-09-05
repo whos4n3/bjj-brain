@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJJ Brain - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .landing-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .auth-container {
+            margin: 2rem 0;
+        }
+        
+        .auth-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .google-btn {
+            background: white;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+        
+        .google-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .email-btn {
+            background: #667eea;
+            color: white;
+        }
+        
+        .email-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: #666;
+        }
+        
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #ddd;
+        }
+        
+        .divider span {
+            padding: 0 1rem;
+        }
+        
+        .email-form {
+            display: none;
+            text-align: left;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2d3748;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .form-actions button {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+            margin: 1rem 0;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        .success {
+            background: #c6f6d5;
+            color: #2f855a;
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            display: none;
+        }
+        
+        .features {
+            margin-top: 2rem;
+            text-align: left;
+        }
+        
+        .features h3 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .feature-list {
+            list-style: none;
+            display: grid;
+            gap: 0.5rem;
+        }
+        
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #4a5568;
+        }
+        
+        .feature-list li::before {
+            content: "✅";
+            font-size: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .landing-container {
+                margin: 1rem;
+                padding: 2rem;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="landing-container">
+        <div class="logo">🥋</div>
+        <h1 class="title">BJJ Brain</h1>
+        <p class="subtitle">Your Ultimate Brazilian Jiu-Jitsu Technique Library</p>
+        
+        <div id="message"></div>
+        
+        <div class="auth-container" id="authContainer">
+            <div class="auth-buttons">
+                <button class="auth-btn google-btn" onclick="signInWithGoogle()">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIyLjU2IDEyLjI1QzIyLjU2IDExLjQ3IDIyLjQ5IDEwLjcyIDIyLjM2IDEwSDEyVjE0LjI2SDE3Ljk2QzE3LjY2IDE1LjYgMTYuOTIgMTYuNzggMTUuODQgMTcuNTVWMjAuMzhIMTkuMzZDMjEuMzQgMTguNTggMjIuNTYgMTUuNiAyMi41NiAxMi4yNVoiIGZpbGw9IiM0Mjg1RjQiLz4KPHBhdGggZD0iTTEyIDIzQzE1LjI0IDIzIDE3Ljk1IDIxLjkzIDE5LjM2IDIwLjM4TDE1Ljg0IDE3LjU1QzE0Ljg2IDE4LjE5IDEzLjU2IDE4LjU3IDEyIDE4LjU3QzkuMDAzIDE4LjU3IDYuNDY2IDE2Ljc1IDUuNTc1IDE0LjEySDE5LjE5QzguODMxIDEzLjM3IDcuNzgzIDEyIDcuNzgzIDEyQzguNDc2IDExLjEgOS42IDEwIDEwLjkgOS41NjNWNi42SDcuNzgzVjEyWiIgZmlsbD0iIzM0QTg1MyIvPgo8cGF0aCBkPSJNNS41NzUgMTQuMTI1QzUuMjkzIDEzLjMzIDUuMTQyIDEyLjQ5IDUuMTQyIDExLjc5NEg1Ljg5OEg3Ljc4N1YxMi4wOTRINS4xNDJDNS4xNDIgMTIuNTQxIDUuMTc3IDEyLjk0OCA1LjU3NSAxNC4xMjVaIiBmaWxsPSIjRkJCQzA0Ii8+CjxwYXRoIGQ9Ik0xMiAyMy4wMDFDMTQuOTk4IDIzLjAwMSAxNy45NSAyMS45MzYgMTkuMzYgMjAuMzgzTDE1Ljg0IDE3LjU1NEMxNC44NjEgMTguMTk0IDEzLjU2MSAxOC41NzMgMTIgMTguNTczQzguOTk3IDE4LjU3MyA2LjQ2IDIwLjM4IDUuNTY5IDE3Ljc0M0MyLjA0MyAyMS45MzYgMy4zMzYgMjMuMDAxIDEyIDIzLjAwMVoiIGZpbGw9IiNFQTQzMzUiLz4KPC9zdmc+" alt="Google" width="24" height="24">
+                    Continue with Google
+                </button>
+                
+                <button class="auth-btn email-btn" onclick="toggleEmailForm()">
+                    📧 Continue with Email
+                </button>
+            </div>
+            
+            <div class="email-form" id="emailForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="toggleEmailForm()">Back</button>
+                    <button type="button" class="btn-primary" onclick="signInWithEmail()">Sign In</button>
+                </div>
+                <div style="text-align: center; margin-top: 1rem;">
+                    <button type="button" class="btn-secondary" onclick="signUpWithEmail()" style="background: none; border: none; color: #667eea; text-decoration: underline; cursor: pointer;">
+                        Don't have an account? Sign Up
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div>🥋 Preparing your BJJ journey...</div>
+        </div>
+        
+        <div class="features">
+            <h3>🚀 What You'll Get</h3>
+            <ul class="feature-list">
+                <li>Access to 65+ detailed BJJ techniques</li>
+                <li>Personalized technique favorites</li>
+                <li>Build your custom game plan</li>
+                <li>Track your BJJ journey & progress</li>
+                <li>Step-by-step technique breakdowns</li>
+                <li>Connect techniques to build flows</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            onAuthStateChanged 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Firebase configuration - Replace with your config
+        const firebaseConfig = {
+            apiKey: "your-api-key",
+            authDomain: "your-project.firebaseapp.com", 
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        // Make auth available globally
+        window.auth = auth;
+        window.googleProvider = googleProvider;
+        
+        // Check if user is already logged in
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                console.log('User is signed in:', user);
+                // Redirect to main app or show loading while setting up profile
+                setupUserProfile(user);
+            }
+        });
+        
+        async function setupUserProfile(user) {
+            try {
+                showLoading('Setting up your profile...');
+                
+                // Check if user profile exists in our backend
+                const response = await fetch(`http://localhost:3001/api/users/profile/${user.uid}`);
+                
+                if (response.ok) {
+                    // User exists, redirect to main app
+                    window.location.href = 'index.html';
+                } else if (response.status === 404) {
+                    // New user, redirect to profile setup
+                    window.location.href = `profile-setup.html?uid=${user.uid}&email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.displayName || '')}`;
+                } else {
+                    throw new Error('Failed to check user profile');
+                }
+            } catch (error) {
+                console.error('Error setting up user profile:', error);
+                showError('Failed to set up your profile. Please try again.');
+                hideLoading();
+            }
+        }
+        
+        // Make functions globally available
+        window.setupUserProfile = setupUserProfile;
+    </script>
+
+    <script>
+        function showLoading(message = '🥋 Loading...') {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerHTML = `<div>${message}</div>`;
+            document.getElementById('authContainer').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('authContainer').style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('message');
+            errorDiv.innerHTML = `<div class="error">${message}</div>`;
+            errorDiv.firstChild.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('message');
+            successDiv.innerHTML = `<div class="success">${message}</div>`;
+            successDiv.firstChild.style.display = 'block';
+        }
+
+        function clearMessages() {
+            document.getElementById('message').innerHTML = '';
+        }
+
+        function toggleEmailForm() {
+            const emailForm = document.getElementById('emailForm');
+            const authButtons = document.querySelector('.auth-buttons');
+            
+            if (emailForm.style.display === 'block') {
+                emailForm.style.display = 'none';
+                authButtons.style.display = 'flex';
+            } else {
+                emailForm.style.display = 'block';
+                authButtons.style.display = 'none';
+            }
+            clearMessages();
+        }
+
+        async function signInWithGoogle() {
+            try {
+                showLoading('Signing in with Google...');
+                clearMessages();
+                
+                const result = await signInWithPopup(window.auth, window.googleProvider);
+                const user = result.user;
+                
+                showSuccess('Successfully signed in with Google!');
+                await setupUserProfile(user);
+                
+            } catch (error) {
+                console.error('Google sign-in error:', error);
+                let errorMessage = 'Failed to sign in with Google. ';
+                
+                switch (error.code) {
+                    case 'auth/popup-blocked':
+                        errorMessage += 'Please allow popups for this site.';
+                        break;
+                    case 'auth/popup-closed-by-user':
+                        errorMessage += 'Sign-in was cancelled.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage += 'Network error. Please check your connection.';
+                        break;
+                    default:
+                        errorMessage += 'Please try again.';
+                }
+                
+                showError(errorMessage);
+                hideLoading();
+            }
+        }
+
+        async function signInWithEmail() {
+            try {
+                showLoading('Signing in...');
+                clearMessages();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    throw new Error('Please enter both email and password');
+                }
+                
+                const result = await signInWithEmailAndPassword(window.auth, email, password);
+                const user = result.user;
+                
+                showSuccess('Successfully signed in!');
+                await setupUserProfile(user);
+                
+            } catch (error) {
+                console.error('Email sign-in error:', error);
+                let errorMessage = 'Failed to sign in. ';
+                
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage += 'No account found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage += 'Incorrect password.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage += 'Invalid email address.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage += 'Too many failed attempts. Please try again later.';
+                        break;
+                    default:
+                        errorMessage += error.message || 'Please try again.';
+                }
+                
+                showError(errorMessage);
+                hideLoading();
+            }
+        }
+
+        async function signUpWithEmail() {
+            try {
+                showLoading('Creating account...');
+                clearMessages();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    throw new Error('Please enter both email and password');
+                }
+                
+                if (password.length < 6) {
+                    throw new Error('Password must be at least 6 characters long');
+                }
+                
+                const result = await createUserWithEmailAndPassword(window.auth, email, password);
+                const user = result.user;
+                
+                showSuccess('Account created successfully!');
+                await setupUserProfile(user);
+                
+            } catch (error) {
+                console.error('Email sign-up error:', error);
+                let errorMessage = 'Failed to create account. ';
+                
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMessage += 'An account with this email already exists.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage += 'Invalid email address.';
+                        break;
+                    case 'auth/weak-password':
+                        errorMessage += 'Password is too weak.';
+                        break;
+                    default:
+                        errorMessage += error.message || 'Please try again.';
+                }
+                
+                showError(errorMessage);
+                hideLoading();
+            }
+        }
+    </script>
+</body>
+</html>

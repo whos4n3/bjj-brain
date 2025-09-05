@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BJJ Brain - Technique Library</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 1rem 0;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .filter-bar {
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        select, button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #5a67d8;
+        }
+        
+        .techniques-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .technique-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        
+        .technique-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        }
+        
+        .view-details {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            width: 100%;
+            transition: background 0.3s;
+        }
+        
+        .view-details:hover {
+            background: #5a67d8;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            position: relative;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin: 0;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+        
+        .modal-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .modal-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .modal-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #4a5568;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .modal-steps {
+            margin-bottom: 2rem;
+        }
+        
+        .modal-steps-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .modal-step-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            align-items: flex-start;
+        }
+        
+        .modal-step-number {
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .modal-step-text {
+            flex: 1;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #4a5568;
+        }
+        
+        .modal-tags {
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-tags-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        
+        .modal-video {
+            margin-top: 2rem;
+            text-align: center;
+        }
+        
+        .modal-video iframe {
+            border-radius: 8px;
+            width: 100%;
+            max-width: 560px;
+            height: 315px;
+        }
+        
+        @media (max-width: 768px) {
+            .modal-content {
+                margin: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                padding: 1rem;
+            }
+            
+            .modal-meta {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .technique-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .technique-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2d3748;
+            flex-grow: 1;
+        }
+        
+        .difficulty-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-left: 1rem;
+        }
+        
+        .difficulty-fundamental {
+            background: #e6fffa;
+            color: #047857;
+        }
+        
+        .difficulty-beginner {
+            background: #ecfdf5;
+            color: #065f46;
+        }
+        
+        .difficulty-intermediate {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .difficulty-advanced {
+            background: #fce7f3;
+            color: #be185d;
+        }
+        
+        .technique-meta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .technique-description {
+            margin-bottom: 1rem;
+            color: #4a5568;
+        }
+        
+        .steps-preview {
+            margin-bottom: 1rem;
+        }
+        
+        .steps-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+        
+        .step-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+        
+        .step-item:last-child {
+            border-bottom: none;
+        }
+        
+        .step-number {
+            font-weight: bold;
+            color: #667eea;
+            margin-right: 0.5rem;
+        }
+        
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tag {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 0.25rem 0.5rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: #666;
+        }
+        
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .techniques-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                justify-content: space-between;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🥋 BJJ Brain</h1>
+            <p class="subtitle">Your Ultimate Brazilian Jiu-Jitsu Technique Library</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalTechniques">-</div>
+                    <div>Techniques</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalUsers">-</div>
+                    <div>Contributors</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">4</div>
+                    <div>Categories</div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+                <a href="upload.html" style="background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 25px; display: inline-block; transition: background 0.3s; font-weight: bold;" 
+                   onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                   onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                    ➕ Upload New Technique
+                </a>
+            </div>
+        </header>
+
+        <div class="filter-bar">
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Category:</label>
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        <option value="SUBMISSION">🔒 Submissions</option>
+                        <option value="GUARD">🛡️ Guard</option>
+                        <option value="PASS">⚡ Passes</option>
+                        <option value="SWEEP">🧹 Sweeps</option>
+                        <option value="ESCAPE">🏃 Escapes</option>
+                        <option value="TAKEDOWN">🤼 Takedowns</option>
+                        <option value="TRANSITION">🔄 Transitions</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Difficulty:</label>
+                    <select id="difficultyFilter">
+                        <option value="">All Levels</option>
+                        <option value="FUNDAMENTAL">Fundamental</option>
+                        <option value="BEGINNER">Beginner</option>
+                        <option value="INTERMEDIATE">Intermediate</option>
+                        <option value="ADVANCED">Advanced</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Position:</label>
+                    <select id="positionFilter">
+                        <option value="">All Positions</option>
+                        <option value="STANDING">🤼 Standing</option>
+                        <option value="CLOSED_GUARD">🛡️ Closed Guard</option>
+                        <option value="OPEN_GUARD">⚡ Open Guard</option>
+                        <option value="HALF_GUARD">🔀 Half Guard</option>
+                        <option value="SIDE_CONTROL">⬅️ Side Control</option>
+                        <option value="MOUNT">⛰️ Mount</option>
+                        <option value="BACK_CONTROL">🎯 Back Control</option>
+                        <option value="KNEE_ON_BELLY">🦵 Knee on Belly</option>
+                    </select>
+                </div>
+                <button onclick="clearFilters()">Clear Filters</button>
+                <button onclick="loadTechniques()">Refresh</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">Loading techniques...</div>
+        <div id="error" class="error" style="display: none;"></div>
+        <div id="techniquesContainer" class="techniques-grid"></div>
+    </div>
+    
+    <!-- Modal for technique details -->
+    <div id="techniqueModal" class="modal">
+        <div id="modalContent" class="modal-content">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+        let allTechniques = [];
+        let allUsers = [];
+
+        // Load techniques and users
+        async function loadTechniques() {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+                
+                const [techniquesResponse, usersResponse] = await Promise.all([
+                    fetch(`${API_BASE}/api/techniques`),
+                    fetch(`${API_BASE}/api/users`)
+                ]);
+                
+                if (!techniquesResponse.ok || !usersResponse.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+                
+                const techniquesData = await techniquesResponse.json();
+                const usersData = await usersResponse.json();
+                
+                allTechniques = techniquesData.data || [];
+                allUsers = usersData.data || [];
+                
+                document.getElementById('totalTechniques').textContent = allTechniques.length;
+                document.getElementById('totalUsers').textContent = allUsers.length;
+                
+                displayTechniques(allTechniques);
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('error').textContent = 'Failed to load techniques. Make sure the API server is running on port 3001.';
+                document.getElementById('error').style.display = 'block';
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function displayTechniques(techniques) {
+            const container = document.getElementById('techniquesContainer');
+            
+            if (techniques.length === 0) {
+                container.innerHTML = '<div class="loading">No techniques found matching your filters.</div>';
+                return;
+            }
+            
+            container.innerHTML = techniques.map(technique => `
+                <div class="technique-card" onclick="openTechniqueModal('${technique.id}')">
+                    <div class="technique-header">
+                        <h3 class="technique-title">${technique.name}</h3>
+                        <span class="difficulty-badge difficulty-${technique.difficulty.toLowerCase()}">${technique.difficulty}</span>
+                    </div>
+                    
+                    <div class="technique-meta">
+                        <div class="meta-item">${getCategoryEmoji(technique.category)} ${formatText(technique.category)}</div>
+                        <div class="meta-item">${getPositionEmoji(technique.position)} ${formatText(technique.position)}</div>
+                        <div class="meta-item">👤 ${technique.user.firstName || 'Unknown'} ${technique.user.lastName || ''}</div>
+                    </div>
+                    
+                    <div class="technique-description">
+                        ${truncateText(technique.description, 100)}
+                    </div>
+                    
+                    ${technique.tags && technique.tags.length > 0 ? `
+                        <div class="tags">
+                            ${technique.tags.slice(0, 3).map(tag => `<span class="tag">${tag}</span>`).join('')}
+                            ${technique.tags.length > 3 ? `<span class="tag">+${technique.tags.length - 3} more</span>` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    ${technique.steps && technique.steps.length > 0 ? `
+                        <div class="steps-preview">
+                            <div class="steps-title">📋 ${technique.steps.length} Step${technique.steps.length > 1 ? 's' : ''}</div>
+                            <div class="step-item">
+                                <span class="step-number">1.</span>
+                                ${truncateText(technique.steps[0]?.instruction || technique.steps[0] || '', 60)}
+                            </div>
+                            ${technique.steps.length > 1 ? `<div class="step-item">... and ${technique.steps.length - 1} more step${technique.steps.length > 2 ? 's' : ''}</div>` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    <button class="view-details" onclick="event.stopPropagation(); openTechniqueModal('${technique.id}')">
+                        🔍 View Full Details
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function formatText(text) {
+            return text.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function getCategoryEmoji(category) {
+            const emojiMap = {
+                'SUBMISSION': '🔒',
+                'GUARD': '🛡️',
+                'PASS': '⚡',
+                'SWEEP': '🧹',
+                'ESCAPE': '🏃',
+                'TAKEDOWN': '🤼',
+                'TRANSITION': '🔄'
+            };
+            return emojiMap[category] || '📂';
+        }
+
+        function getPositionEmoji(position) {
+            const emojiMap = {
+                'STANDING': '🤼',
+                'CLOSED_GUARD': '🛡️',
+                'OPEN_GUARD': '⚡',
+                'HALF_GUARD': '🔀',
+                'SIDE_CONTROL': '⬅️',
+                'MOUNT': '⛰️',
+                'BACK_CONTROL': '🎯',
+                'KNEE_ON_BELLY': '🦵'
+            };
+            return emojiMap[position] || '🥋';
+        }
+
+        function filterTechniques() {
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const difficultyFilter = document.getElementById('difficultyFilter').value;
+            const positionFilter = document.getElementById('positionFilter').value;
+            
+            let filtered = allTechniques.filter(technique => {
+                const matchesCategory = !categoryFilter || technique.category === categoryFilter;
+                const matchesDifficulty = !difficultyFilter || technique.difficulty === difficultyFilter;
+                const matchesPosition = !positionFilter || technique.position === positionFilter;
+                
+                return matchesCategory && matchesDifficulty && matchesPosition;
+            });
+            
+            displayTechniques(filtered);
+        }
+
+        function clearFilters() {
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('difficultyFilter').value = '';
+            document.getElementById('positionFilter').value = '';
+            displayTechniques(allTechniques);
+        }
+
+        // Add event listeners
+        document.getElementById('categoryFilter').addEventListener('change', filterTechniques);
+        document.getElementById('difficultyFilter').addEventListener('change', filterTechniques);
+        document.getElementById('positionFilter').addEventListener('change', filterTechniques);
+
+        function truncateText(text, maxLength) {
+            if (!text || text.length <= maxLength) return text;
+            return text.substring(0, maxLength).trim() + '...';
+        }
+        
+        function openTechniqueModal(techniqueId) {
+            console.log('Opening modal for technique ID:', techniqueId);
+            console.log('Available techniques:', allTechniques.length);
+            
+            const technique = allTechniques.find(t => t.id === techniqueId);
+            console.log('Found technique:', technique);
+            
+            if (!technique) {
+                console.error('Technique not found with ID:', techniqueId);
+                return;
+            }
+            
+            const modal = document.getElementById('techniqueModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.innerHTML = `
+                <div class="modal-header">
+                    <h2 class="modal-title">${technique.name}</h2>
+                    <button class="close" onclick="closeTechniqueModal()">&times;</button>
+                </div>
+                
+                <div class="modal-meta">
+                    <div class="modal-meta-item">
+                        ${getCategoryEmoji(technique.category)} <strong>Category:</strong> ${formatText(technique.category)}
+                    </div>
+                    <div class="modal-meta-item">
+                        ${getPositionEmoji(technique.position)} <strong>Position:</strong> ${formatText(technique.position)}
+                    </div>
+                    <div class="modal-meta-item">
+                        <span class="difficulty-badge difficulty-${technique.difficulty.toLowerCase()}">${technique.difficulty}</span>
+                    </div>
+                    <div class="modal-meta-item">
+                        👤 <strong>By:</strong> ${technique.user.firstName || 'Unknown'} ${technique.user.lastName || ''}
+                    </div>
+                </div>
+                
+                <div class="modal-description">
+                    ${technique.description}
+                </div>
+                
+                ${technique.tags && technique.tags.length > 0 ? `
+                    <div class="modal-tags">
+                        <div class="modal-tags-title">🏷️ Tags</div>
+                        <div class="tags">
+                            ${technique.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${technique.steps && technique.steps.length > 0 ? `
+                    <div class="modal-steps">
+                        <div class="modal-steps-title">📋 Step-by-Step Instructions</div>
+                        ${technique.steps.map(step => `
+                            <div class="modal-step-item">
+                                <div class="modal-step-number">${step.stepNumber}</div>
+                                <div class="modal-step-text">${step.instruction}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : ''}
+                
+                ${technique.videoUrl ? `
+                    <div class="modal-video">
+                        <h3>📺 Video Demonstration</h3>
+                        ${getVideoEmbed(technique.videoUrl)}
+                    </div>
+                ` : ''}
+            `;
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeTechniqueModal() {
+            const modal = document.getElementById('techniqueModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+        function getVideoEmbed(url) {
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                const videoId = extractYouTubeId(url);
+                return `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+            }
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+        }
+        
+        function extractYouTubeId(url) {
+            const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+            return match ? match[1] : '';
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('techniqueModal');
+            if (event.target === modal) {
+                closeTechniqueModal();
+            }
+        }
+        
+        // Close modal with escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeTechniqueModal();
+            }
+        });
+        
+        // Load data on page load
+        loadTechniques();
+    </script>
+</body>
+</html>
