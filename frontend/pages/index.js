@@ -16,8 +16,18 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState('home');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [techniques, setTechniques] = useState([]);
+  const [filteredTechniques, setFilteredTechniques] = useState([]);
   const [loadingTechniques, setLoadingTechniques] = useState(false);
   const [showAddTechniqueForm, setShowAddTechniqueForm] = useState(false);
+  const [selectedTechnique, setSelectedTechnique] = useState(null);
+  const [showTechniqueModal, setShowTechniqueModal] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+  const [filters, setFilters] = useState({
+    difficulty: 'ALL',
+    position: 'ALL',
+    trainingType: 'ALL'
+  });
+  const [searchQuery, setSearchQuery] = useState('');
   const [newTechnique, setNewTechnique] = useState({
     name: '',
     description: '',
@@ -35,6 +45,47 @@ export default function Home() {
       fetchTechniques();
     }
   }, [currentPage]);
+
+  // Filter techniques based on filters and search
+  useEffect(() => {
+    let filtered = techniques;
+    
+    // Apply difficulty filter
+    if (filters.difficulty !== 'ALL') {
+      filtered = filtered.filter(tech => tech.difficulty === filters.difficulty);
+    }
+    
+    // Apply position filter
+    if (filters.position !== 'ALL') {
+      filtered = filtered.filter(tech => tech.position === filters.position);
+    }
+    
+    // Apply training type filter
+    if (filters.trainingType !== 'ALL') {
+      filtered = filtered.filter(tech => tech.trainingType === filters.trainingType);
+    }
+    
+    // Apply search query
+    if (searchQuery) {
+      filtered = filtered.filter(tech => 
+        tech.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tech.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (tech.tags && tech.tags.some(tag => 
+          (tag.name || tag).toLowerCase().includes(searchQuery.toLowerCase())
+        ))
+      );
+    }
+    
+    setFilteredTechniques(filtered);
+  }, [techniques, filters, searchQuery]);
+
+  // Load favorites from localStorage
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('favorites');
+    if (savedFavorites) {
+      setFavorites(JSON.parse(savedFavorites));
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -70,7 +121,7 @@ export default function Home() {
     setLoadingTechniques(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8080/api/techniques', {
+      const response = await axios.get('http://localhost:8080/api/techniques?limit=100', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTechniques(response.data.techniques || response.data || []);
@@ -80,6 +131,69 @@ export default function Home() {
     } finally {
       setLoadingTechniques(false);
     }
+  };
+
+  const toggleFavorite = (techniqueId) => {
+    const newFavorites = favorites.includes(techniqueId)
+      ? favorites.filter(id => id !== techniqueId)
+      : [...favorites, techniqueId];
+    
+    setFavorites(newFavorites);
+    localStorage.setItem('favorites', JSON.stringify(newFavorites));
+  };
+
+  const openTechniqueModal = (technique) => {
+    setSelectedTechnique(technique);
+    setShowTechniqueModal(true);
+  };
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({...prev, [filterType]: value}));
+  };
+
+  const clearFilters = () => {
+    setFilters({ difficulty: 'ALL', position: 'ALL', trainingType: 'ALL' });
+    setSearchQuery('');
+  };
+
+  const getTrainingTypeColor = (trainingType) => {
+    switch(trainingType) {
+      case 'GI_ONLY': return 'bg-blue-100 text-blue-700';
+      case 'NOGI_ONLY': return 'bg-red-100 text-red-700';
+      case 'BOTH': return 'bg-green-100 text-green-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getTrainingTypeLabel = (trainingType) => {
+    switch(trainingType) {
+      case 'GI_ONLY': return 'Gi Only';
+      case 'NOGI_ONLY': return 'No-Gi Only';
+      case 'BOTH': return 'Gi & No-Gi';
+      default: return trainingType;
+    }
+  };
+
+  const isJudoTechnique = (technique) => {
+    const judoIndicators = ['judo', 'throw', 'osoto', 'uchi', 'seoi', 'harai', 'kouchi', 'ouchi'];
+    return judoIndicators.some(indicator => 
+      technique.name.toLowerCase().includes(indicator) ||
+      technique.description.toLowerCase().includes(indicator) ||
+      (technique.tags && technique.tags.some(tag => 
+        (tag.name || tag).toLowerCase().includes(indicator)
+      ))
+    );
+  };
+
+  const isWrestlingTechnique = (technique) => {
+    const wrestlingIndicators = ['wrestling', 'takedown', 'single leg', 'double leg', 'sprawl', 'underhook', 'arm drag'];
+    return wrestlingIndicators.some(indicator => 
+      technique.name.toLowerCase().includes(indicator) ||
+      technique.description.toLowerCase().includes(indicator) ||
+      (technique.tags && technique.tags.some(tag => 
+        (tag.name || tag).toLowerCase().includes(indicator)
+      ))
+    );
   };
 
   const handleAddTechnique = async (e) => {
@@ -189,13 +303,107 @@ export default function Home() {
     return (
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">BJJ Techniques</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">BJJ Techniques</h1>
+            <p className="text-gray-600 mt-1">
+              Showing {filteredTechniques.length} of {techniques.length} techniques
+            </p>
+          </div>
           <button 
             onClick={() => setShowAddTechniqueForm(true)}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
           >
             + Add Technique
           </button>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Search */}
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+              <input
+                type="text"
+                placeholder="Search techniques..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            {/* Difficulty Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+              <select
+                value={filters.difficulty}
+                onChange={(e) => handleFilterChange('difficulty', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="ALL">All Levels</option>
+                <option value="FUNDAMENTAL">Fundamental</option>
+                <option value="BEGINNER">Beginner</option>
+                <option value="INTERMEDIATE">Intermediate</option>
+                <option value="ADVANCED">Advanced</option>
+                <option value="EXPERT">Expert</option>
+              </select>
+            </div>
+
+            {/* Position Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+              <select
+                value={filters.position}
+                onChange={(e) => handleFilterChange('position', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="ALL">All Positions</option>
+                <option value="STANDING">Standing</option>
+                <option value="CLOSED_GUARD">Closed Guard</option>
+                <option value="OPEN_GUARD">Open Guard</option>
+                <option value="HALF_GUARD">Half Guard</option>
+                <option value="SIDE_CONTROL">Side Control</option>
+                <option value="MOUNT">Mount</option>
+                <option value="BACK_CONTROL">Back Control</option>
+                <option value="TAKEDOWN">Takedown</option>
+                <option value="SUBMISSION">Submission</option>
+                <option value="ESCAPE">Escape</option>
+                <option value="SWEEP">Sweep</option>
+                <option value="COUNTER">Counter</option>
+                <option value="GUARD_PASS">Guard Pass</option>
+              </select>
+            </div>
+
+            {/* Training Type Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Training Type</label>
+              <select
+                value={filters.trainingType}
+                onChange={(e) => handleFilterChange('trainingType', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="ALL">All Types</option>
+                <option value="BOTH">Gi & No-Gi</option>
+                <option value="GI_ONLY">Gi Only</option>
+                <option value="NOGI_ONLY">No-Gi Only</option>
+              </select>
+            </div>
+          </div>
+          
+          {/* Clear Filters */}
+          <div className="mt-4 flex justify-between items-center">
+            <button
+              onClick={clearFilters}
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              Clear Filters
+            </button>
+            <div className="text-sm text-gray-500">
+              {(filters.difficulty !== 'ALL' || filters.position !== 'ALL' || filters.trainingType !== 'ALL' || searchQuery) && 
+                'Filters active'
+              }
+            </div>
+          </div>
         </div>
 
         {loadingTechniques ? (
@@ -205,7 +413,7 @@ export default function Home() {
               <p className="text-gray-500">Loading techniques...</p>
             </div>
           </div>
-        ) : techniques.length === 0 ? (
+        ) : filteredTechniques.length === 0 ? (
           <div className="bg-white shadow rounded-lg p-6">
             <div className="text-center py-12">
               <div className="mb-4">
@@ -215,22 +423,50 @@ export default function Home() {
                   </svg>
                 </div>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No techniques yet</h3>
-              <p className="text-gray-500 mb-4">Start building your technique library by adding your first technique.</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {techniques.length === 0 ? 'No techniques yet' : 'No techniques match your filters'}
+              </h3>
+              <p className="text-gray-500 mb-4">
+                {techniques.length === 0 
+                  ? 'Start building your technique library by adding your first technique.'
+                  : 'Try adjusting your search criteria or clearing the filters.'
+                }
+              </p>
               <button 
-                onClick={() => setShowAddTechniqueForm(true)}
+                onClick={techniques.length === 0 ? () => setShowAddTechniqueForm(true) : clearFilters}
                 className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
               >
-                Add Your First Technique
+                {techniques.length === 0 ? 'Add Your First Technique' : 'Clear Filters'}
               </button>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {techniques.map((technique) => (
-              <div key={technique.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+            {filteredTechniques.map((technique) => (
+              <div 
+                key={technique.id} 
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+                onClick={() => openTechniqueModal(technique)}
+              >
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">{technique.name}</h3>
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900 flex-1">{technique.name}</h3>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(technique.id);
+                      }}
+                      className={`ml-2 p-1 rounded-full transition-colors duration-200 ${
+                        favorites.includes(technique.id)
+                          ? 'text-red-500 hover:text-red-600'
+                          : 'text-gray-300 hover:text-red-500'
+                      }`}
+                    >
+                      <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                    </button>
+                  </div>
                   
                   {technique.description && (
                     <p className="text-gray-600 text-sm mb-4 line-clamp-3">
@@ -252,8 +488,10 @@ export default function Home() {
                       <div className="text-sm">
                         <span className="font-medium text-gray-700">Difficulty:</span>
                         <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                          technique.difficulty === 'FUNDAMENTAL' ? 'bg-gray-100 text-gray-700' :
                           technique.difficulty === 'BEGINNER' ? 'bg-green-100 text-green-700' :
                           technique.difficulty === 'INTERMEDIATE' ? 'bg-yellow-100 text-yellow-700' :
+                          technique.difficulty === 'ADVANCED' ? 'bg-orange-100 text-orange-700' :
                           'bg-red-100 text-red-700'
                         }`}>
                           {technique.difficulty}
@@ -262,12 +500,23 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-3">
                     {/* Training type tag */}
                     {technique.trainingType && (
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-md">
-                        {technique.trainingType.toLowerCase().replace('_', ' ')}
+                      <span className={`px-2 py-1 text-xs rounded-md ${getTrainingTypeColor(technique.trainingType)}`}>
+                        {getTrainingTypeLabel(technique.trainingType)}
+                      </span>
+                    )}
+                    
+                    {/* Art type tags */}
+                    {isJudoTechnique(technique) && (
+                      <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-md">
+                        Judo
+                      </span>
+                    )}
+                    {isWrestlingTechnique(technique) && (
+                      <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-md">
+                        Wrestling
                       </span>
                     )}
                     
@@ -280,32 +529,190 @@ export default function Home() {
                     
                     {/* API tags */}
                     {technique.tags && technique.tags.length > 0 && 
-                      technique.tags.map((tag, index) => (
+                      technique.tags.slice(0, 3).map((tag, index) => (
                         <span key={index} className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-md">
                           {tag.name || tag}
                         </span>
                       ))
                     }
                     
-                    {/* Fallback tags if no API tags */}
-                    {(!technique.tags || technique.tags.length === 0) && (
-                      <>
-                        <span className="px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-md">bjj</span>
-                        {technique.name?.toLowerCase().includes('submission') && (
-                          <span className="px-2 py-1 bg-red-100 text-red-700 text-xs rounded-md">submission</span>
-                        )}
-                        {technique.name?.toLowerCase().includes('takedown') && (
-                          <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-md">takedown</span>
-                        )}
-                        {technique.name?.toLowerCase().includes('sweep') && (
-                          <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-md">sweep</span>
-                        )}
-                      </>
+                    {/* Show more tags indicator */}
+                    {technique.tags && technique.tags.length > 3 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-md">
+                        +{technique.tags.length - 3} more
+                      </span>
                     )}
+                  </div>
+                  
+                  {/* Click indicator */}
+                  <div className="text-center">
+                    <span className="text-xs text-blue-600 font-medium">Click for details</span>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Technique Detail Modal */}
+        {showTechniqueModal && selectedTechnique && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-10 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">{selectedTechnique.name}</h2>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedTechnique.difficulty === 'FUNDAMENTAL' ? 'bg-gray-100 text-gray-700' :
+                      selectedTechnique.difficulty === 'BEGINNER' ? 'bg-green-100 text-green-700' :
+                      selectedTechnique.difficulty === 'INTERMEDIATE' ? 'bg-yellow-100 text-yellow-700' :
+                      selectedTechnique.difficulty === 'ADVANCED' ? 'bg-orange-100 text-orange-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      {selectedTechnique.difficulty}
+                    </span>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
+                      {selectedTechnique.position?.replace('_', ' ')}
+                    </span>
+                    <span className={`px-3 py-1 text-sm rounded-full ${getTrainingTypeColor(selectedTechnique.trainingType)}`}>
+                      {getTrainingTypeLabel(selectedTechnique.trainingType)}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => toggleFavorite(selectedTechnique.id)}
+                    className={`p-2 rounded-full transition-colors duration-200 ${
+                      favorites.includes(selectedTechnique.id)
+                        ? 'text-red-500 hover:text-red-600 bg-red-50'
+                        : 'text-gray-300 hover:text-red-500 hover:bg-red-50'
+                    }`}
+                  >
+                    <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                  </button>
+                  <button 
+                    onClick={() => setShowTechniqueModal(false)}
+                    className="text-gray-400 hover:text-gray-600 p-2"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Description */}
+              {selectedTechnique.description && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
+                  <p className="text-gray-700 leading-relaxed">{selectedTechnique.description}</p>
+                </div>
+              )}
+
+              {/* Video URL Section */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Video</h3>
+                {selectedTechnique.videoUrl ? (
+                  <div className="aspect-w-16 aspect-h-9">
+                    <iframe
+                      src={selectedTechnique.videoUrl}
+                      title={selectedTechnique.name}
+                      className="w-full h-64 rounded-lg"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <svg className="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-gray-500">No video available for this technique</p>
+                    <p className="text-xs text-gray-400 mt-1">Video links can be added by technique contributors</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Step-by-Step Instructions */}
+              {selectedTechnique.steps && selectedTechnique.steps.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Step-by-Step Instructions</h3>
+                  <div className="space-y-4">
+                    {selectedTechnique.steps.map((step, index) => (
+                      <div key={step.id || index} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold text-sm">
+                            {step.stepNumber || index + 1}
+                          </div>
+                          <div className="ml-4 flex-1">
+                            <p className="text-gray-900 font-medium mb-2">{step.instruction || step.description}</p>
+                            
+                            {step.keyPoints && step.keyPoints.length > 0 && (
+                              <div className="mb-2">
+                                <h4 className="text-sm font-medium text-green-700 mb-1">Key Points:</h4>
+                                <ul className="text-sm text-green-600 list-disc list-inside space-y-1">
+                                  {step.keyPoints.map((point, idx) => (
+                                    <li key={idx}>{point}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            
+                            {step.commonMistakes && step.commonMistakes.length > 0 && (
+                              <div>
+                                <h4 className="text-sm font-medium text-red-700 mb-1">Common Mistakes:</h4>
+                                <ul className="text-sm text-red-600 list-disc list-inside space-y-1">
+                                  {step.commonMistakes.map((mistake, idx) => (
+                                    <li key={idx}>{mistake}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Tags */}
+              {selectedTechnique.tags && selectedTechnique.tags.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTechnique.tags.map((tag, index) => (
+                      <span key={index} className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded-full">
+                        {tag.name || tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center pt-4 border-t">
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => toggleFavorite(selectedTechnique.id)}
+                    className={`px-4 py-2 rounded-md transition duration-200 ${
+                      favorites.includes(selectedTechnique.id)
+                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {favorites.includes(selectedTechnique.id) ? 'Remove from Favorites' : 'Add to Favorites'}
+                  </button>
+                </div>
+                <button 
+                  onClick={() => setShowTechniqueModal(false)}
+                  className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
@@ -587,30 +994,126 @@ export default function Home() {
     </div>
   );
 
-  const renderMyGamePage = () => (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">My Game</h1>
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="text-center py-12">
-          <div className="mb-4">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
-              <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-              </svg>
-            </div>
+  const renderMyGamePage = () => {
+    const favoriteTechniques = techniques.filter(tech => favorites.includes(tech.id));
+    
+    return (
+      <div>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">My Game</h1>
+            <p className="text-gray-600 mt-1">
+              {favoriteTechniques.length} favorite techniques
+            </p>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No favorite techniques yet</h3>
-          <p className="text-gray-500 mb-4">Your favorited techniques will appear here to help you focus on your preferred moves.</p>
           <button 
             onClick={() => setCurrentPage('techniques')}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200"
           >
-            Browse Techniques
+            Browse More Techniques
           </button>
         </div>
+
+        {favoriteTechniques.length === 0 ? (
+          <div className="bg-white shadow rounded-lg p-6">
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto">
+                  <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No favorite techniques yet</h3>
+              <p className="text-gray-500 mb-4">Your favorited techniques will appear here to help you focus on your preferred moves.</p>
+              <button 
+                onClick={() => setCurrentPage('techniques')}
+                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition duration-200"
+              >
+                Browse Techniques
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {favoriteTechniques.map((technique) => (
+              <div 
+                key={technique.id} 
+                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer"
+                onClick={() => openTechniqueModal(technique)}
+              >
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="text-lg font-semibold text-gray-900 flex-1">{technique.name}</h3>
+                    <div className="text-red-500">
+                      <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  {technique.description && (
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                      {technique.description.length > 150 
+                        ? `${technique.description.substring(0, 150)}...` 
+                        : technique.description}
+                    </p>
+                  )}
+
+                  <div className="flex flex-col space-y-2 mb-4">
+                    {technique.position && (
+                      <div className="text-sm">
+                        <span className="font-medium text-gray-700">Position:</span>
+                        <span className="ml-2 text-gray-600">{technique.position}</span>
+                      </div>
+                    )}
+                    
+                    {technique.difficulty && (
+                      <div className="text-sm">
+                        <span className="font-medium text-gray-700">Difficulty:</span>
+                        <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                          technique.difficulty === 'FUNDAMENTAL' ? 'bg-gray-100 text-gray-700' :
+                          technique.difficulty === 'BEGINNER' ? 'bg-green-100 text-green-700' :
+                          technique.difficulty === 'INTERMEDIATE' ? 'bg-yellow-100 text-yellow-700' :
+                          technique.difficulty === 'ADVANCED' ? 'bg-orange-100 text-orange-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {technique.difficulty}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {technique.trainingType && (
+                      <span className={`px-2 py-1 text-xs rounded-md ${getTrainingTypeColor(technique.trainingType)}`}>
+                        {getTrainingTypeLabel(technique.trainingType)}
+                      </span>
+                    )}
+                    
+                    {isJudoTechnique(technique) && (
+                      <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-md">
+                        Judo
+                      </span>
+                    )}
+                    {isWrestlingTechnique(technique) && (
+                      <span className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-md">
+                        Wrestling
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="text-center">
+                    <span className="text-xs text-blue-600 font-medium">Click for details</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderMindMapPage = () => (
     <div>
@@ -965,7 +1468,7 @@ export default function Home() {
         )}
 
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>Test user: test@example.com / password123</p>
+          <p>Test user: admin@bjjbrain.com / admin123</p>
         </div>
       </div>
     </div>

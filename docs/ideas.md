@@ -7,3 +7,5 @@
  - There should be a system to know what will work in certain situations and there should be enough intellegience in the game where people can start defending with specifics like under hooks or putting a knee shield in etc
  - the game finishes when someone finishes the other by choke or joint locks
  
+
+- The cards should have the youtube video thumbnail as the main pic when seen and when you click on it it should have the vid then a brief description and then step by step instructions below that.
